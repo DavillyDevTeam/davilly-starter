@@ -1,35 +1,68 @@
 # davilly-starter
 
-Davilly’s open-source **app starter**. Not an LLM/agent product kit.
+Davilly Software’s open-source app **Starter** for Davilly and external Consumers alike. The Python **Generator** uses Typer and Copier to turn a parameterized **Template** into a FastAPI + Vite React SPA + Postgres **Generated app**.
+
+## Status and Generator interface
+
+The Generator and Template are not implemented yet on `main`. The commands below describe the planned interface; they cannot generate an app today.
+
+Until publication to PyPI, the Generator will run directly from git:
+
+```bash
+uvx --from git+https://github.com/DavillyDevTeam/davilly-starter davilly-starter new my-app
+```
+
+After publication to PyPI (a v1 gate):
 
 ```bash
 uvx davilly-starter new my-app
 ```
 
-The CLI does not generate an app yet. This repo is the public home for that generator.
+Copier parameters will include project name, author, license (MIT by default), and locales. Generated apps will have their own identity, without hard-coded Davilly product branding.
 
-## What it will generate (v1)
+## Planned v1 Generated app
 
-A **web** app (no desktop in v1):
-
-| Piece | Choice |
-|--------|--------|
+| Piece | v1 decision |
+| --- | --- |
 | API | FastAPI |
-| UI | Vite + React SPA |
-| Auth | Email/password or magic link + sessions |
-| Payments | Stripe |
-| Marketing | Landing page |
-| Local run | Docker Compose |
-| Copy | English **and** Portuguese (Brazil) |
-| Agent rails | `AGENTS.md` + `docs/agents/` (issue tracker / triage / domain docs) |
+| Frontend | Vite + React SPA with a marketing landing page |
+| Database | Postgres |
+| Workspace | Nx at the Generated-app root; pnpm for the SPA; uv for all Python dependencies, with Nx targets calling `uv run` |
+| Auth | fastapi-users with email/password and JWT; Google and GitHub OAuth optional via runtime environment variables |
+| Billing | Stripe subscriptions, Customer Portal, and signed webhooks using Stripe’s official SDK |
+| Locales | `en,pt-BR` by default, configurable through Copier |
+| Local boot | Docker Compose; the first boot milestone is a visible marketing landing page |
+| Production | SPA on Cloudflare Pages; FastAPI API on any Docker host |
+| Agent guidance | `AGENTS.md` and `docs/agents/` for issue tracking, triage, and domain docs |
 
-**Later (not v1):** Tauri as a generator flag. Not Next.js. Not a second HTTP server.
+Auth token storage and revocation remain under discussion in [Grilling: Auth token strategy after fastapi-users research](https://github.com/DavillyDevTeam/davilly-starter/issues/26). A Redis blacklist is not a settled feature; fastapi-users’ Redis strategy uses opaque tokens, and its JWT logout does not revoke a token.
 
-## Why it exists
+Billing initially uses one Stripe Price ID supplied through the environment. The plan catalog remains under discussion in [Grilling: Stripe plan catalog](https://github.com/DavillyDevTeam/davilly-starter/issues/14).
 
-This is **Davilly Software’s internal starter**, published so other people can use the same skeleton. Strangers clone it; if nobody else does, Davilly still uses it.
+## Running a Generated app
 
-GitHub org: [DavillyDevTeam](https://github.com/DavillyDevTeam). The product name is `davilly-starter`, not “AI stack”.
+Once the Generator and Template land, the local boot interface will be:
+
+```bash
+cd my-app
+docker compose up
+```
+
+Local development uses Vite and Uvicorn. The Generated-app validation interface will be:
+
+```bash
+pnpm nx run-many -t lint,typecheck,test,build
+```
+
+The Workspace uses **Nx + pnpm + uv**, as specified in [ADR 0004](docs/adr/0004-nx-uv-pnpm-workspace.md), which supersedes the earlier Just decision. This Starter itself stays a uv Python project; its Copier Template is package data.
+
+Production separates the SPA from the API: Cloudflare Pages hosts the frontend, and a Docker host runs FastAPI. See [ADR 0001](docs/adr/0001-fastapi-vite-generated-app.md).
+
+## Scope and decisions
+
+v1 targets web apps. Desktop/Tauri is a possible later Generator flag. Next.js and full-stack Node are outside v1, and Orca is optional for Consumers.
+
+Follow [Wayfinder: davilly-starter v1](https://github.com/DavillyDevTeam/davilly-starter/issues/1) for implementation progress and open decisions. Domain vocabulary lives in [CONTEXT.md](CONTEXT.md).
 
 ## License
 
