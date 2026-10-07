@@ -123,6 +123,36 @@ def test_apache_license_includes_full_text(tmp_path: Path) -> None:
     assert "TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION" in text
 
 
+def test_prod_deploy_docs_and_template_files(tmp_path: Path) -> None:
+    destination = tmp_path / "my-app"
+    result = CliRunner().invoke(app, ["new", str(destination)])
+    assert result.exit_code == 0, result.output
+    readme = (destination / "README.md").read_text()
+    assert "Cloudflare Pages" in readme
+    assert "VITE_API_URL" in readme
+    assert "CORS_ORIGINS" in readme
+    assert "DATABASE_URL" in readme
+    assert "REDIS_URL" in readme
+    assert "STRIPE_SECRET_KEY" in readme
+    assert "GOOGLE_OAUTH_CLIENT_ID" in readme
+    assert "GITHUB_OAUTH_CLIENT_ID" in readme
+    assert "JWT_SECRET" in readme
+    env_example = (destination / ".env.example").read_text()
+    assert "VITE_API_URL=" in env_example
+    assert "CORS_ORIGINS=" in env_example
+    assert "DATABASE_URL=" in env_example
+    api_main = (destination / "apps/api/main.py").read_text()
+    assert "CORSMiddleware" in api_main
+    assert "CORS_ORIGINS" in api_main
+    assert "apiUrl" in (destination / "apps/web/src/api.ts").read_text()
+    assert "VITE_API_URL" in (destination / "apps/web/src/vite-env.d.ts").read_text()
+    compose = (destination / "compose.yaml").read_text()
+    assert "API_PROXY_TARGET" in compose
+    assert "VITE_API_URL" not in compose
+    assert (destination / "Dockerfile.api").exists()
+    assert_api_style_clean(destination)
+
+
 @pytest.mark.parametrize("arguments", [["--locales", "fr"], ["--license", "bogus"]])
 def test_invalid_flags_do_not_write(tmp_path: Path, arguments: list[str]) -> None:
     destination = tmp_path / "my-app"

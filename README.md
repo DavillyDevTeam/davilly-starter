@@ -11,7 +11,6 @@ docker compose up --build
 
 Open http://localhost:5173 for the marketing landing in English and Português
 (Brasil). FastAPI docs are at http://localhost:8000/docs. Compose includes Postgres.
-Until this change is merged, append `@LuizDMM/wf-scaffold-landing` to the git URL.
 PyPI publishing is a follow-up; `uvx davilly-starter` is not available yet.
 
 ```sh
@@ -24,10 +23,11 @@ rejected. Supported locales are `en`, `pt-BR`, or both; supported license option
 are `MIT`, `Apache-2.0`, and `UNLICENSED`. No prompts or second Template clone.
 The Template is bundled inside the installed wheel at `davilly_starter/copier_root`.
 
-The Generated app README documents native development and
-`pnpm nx run-many -t lint,typecheck,test,build`. Generated apps ship `AGENTS.md`
-and `docs/agents/` (Orca optional). No credentials are needed for boot.
-Auth, billing, OAuth, production deployment, and CI are follow-up work.
+The Generated app README documents native development,
+`pnpm nx run-many -t lint,typecheck,test,build`, and production deploy
+(Cloudflare Pages SPA + FastAPI on any Docker host). Generated apps ship
+`AGENTS.md` and `docs/agents/` (Orca optional). No credentials are needed
+for boot. Auth, billing, OAuth, and CI are follow-up work.
 
 ## Develop the Generator
 

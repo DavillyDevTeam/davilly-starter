@@ -1,13 +1,45 @@
-from fastapi import FastAPI
-from pydantic import BaseModel
+import os
 
-app = FastAPI(title={{ project_name | tojson }})
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 
 
 class Health(BaseModel):
     status: str = "ok"
 
 
-@app.get("/api/health")
-def health() -> Health:
-    return Health()
+def cors_origins() -> list[str]:
+    raw = os.environ.get("CORS_ORIGINS", "")
+    return [item.strip().rstrip("/") for item in raw.split(",") if item.strip()]
+
+
+def cors_origin_regex() -> str | None:
+    value = os.environ.get("CORS_ORIGIN_REGEX", "").strip()
+    if value == "":
+        return None
+    return value
+
+
+def create_app() -> FastAPI:
+    application = FastAPI(title={{ project_name | tojson }})
+    origins = cors_origins()
+    origin_regex = cors_origin_regex()
+    if origins or origin_regex is not None:
+        application.add_middleware(
+            CORSMiddleware,
+            allow_origins=origins,
+            allow_origin_regex=origin_regex,
+            allow_credentials=False,
+            allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+            allow_headers=["Authorization", "Content-Type"],
+        )
+
+    @application.get("/api/health")
+    def health() -> Health:
+        return Health()
+
+    return application
+
+
+app = create_app()

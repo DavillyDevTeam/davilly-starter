@@ -34,9 +34,74 @@ pnpm nx run api:lock
 
 Python dependencies belong to uv; JS dependencies belong to pnpm. Commit the
 `uv.lock` and `pnpm-lock.yaml` created at first install. Nx coordinates the
-`api` and `web` projects. No hosted services or credentials are needed.
-Authentication, payments, deployment and CI are future additions.
+`api` and `web` projects. No hosted services or credentials are needed for boot.
+Authentication, payments, and CI are future additions.
 Copier records answers for inspection; automatic template updates are not supported yet.
+
+## Production
+
+Two origins: the Vite SPA on Cloudflare Pages, and FastAPI as a container on any
+Docker host (Fly, Railway, a VPS, or equivalent). FastAPI does not serve the SPA
+and does not run on Cloudflare Workers. Local Compose stays the development boot.
+
+### API container
+
+```sh
+docker build -f Dockerfile.api -t {{ project_slug }}-api .
+docker run --env-file .env -p 8000:8000 {{ project_slug }}-api
+```
+
+Put that process behind HTTPS. A Pages SPA can only call an `https://` API.
+`Dockerfile.web` is the local Vite dev server; Pages hosts the static build.
+
+### SPA on Cloudflare Pages
+
+1. Deploy the API so `VITE_API_URL` is a live HTTPS origin.
+2. Set `VITE_API_URL=https://<api-host>` in the environment that runs
+   `pnpm nx run web:build`. Git integration: Pages **Settings → Environment
+   variables** (production and preview separately). Direct Upload: set it in CI
+   before `vite build`; dashboard vars do not rewrite an already-built bundle.
+   Changing the API host requires a new build.
+3. Git integration from this repo root: build command
+   `pnpm install && pnpm nx run web:build`, output directory `apps/web/dist`,
+   Node 24 (`NODE_VERSION=24`). The production branch updates
+   `<project>.pages.dev` and custom domains; other branches get preview URLs.
+4. Direct Upload: `pnpm nx run web:build` then
+   `npx wrangler pages deploy apps/web/dist --project-name=<name>`.
+5. Add every Pages hostname you attach (including `www` vs apex, and preview
+   URLs that should call this API) to `CORS_ORIGINS` or `CORS_ORIGIN_REGEX`.
+6. Leave out a top-level `404.html` so Pages serves `/` for unknown paths.
+   Pages `_redirects` cannot proxy the API.
+
+The SPA calls `${VITE_API_URL}/api/...` via `apiUrl` in `apps/web/src/api.ts`.
+With `VITE_API_URL` unset, that is same-origin `/api/...` and the Vite proxy
+forwards it. Send `Authorization: Bearer` when auth lands; omit
+`credentials: "include"` on `fetch`.
+
+### Environment
+
+Copy `.env.example`. `VITE_*` values are inlined into client JS at build time;
+keep secrets on the API.
+
+| Variable | Where | When |
+| --- | --- | --- |
+| `VITE_API_URL` | Pages / CI build | Pages deploy |
+| `CORS_ORIGINS` | API runtime | Pages deploy (comma-separated origins, no paths) |
+| `CORS_ORIGIN_REGEX` | API runtime | Optional preview hashes for this Pages project |
+| `DATABASE_URL` | API runtime | When the API uses Postgres (Compose still uses `db`) |
+| `JWT_SECRET` | API runtime | When auth lands |
+| `REDIS_URL` | API runtime | Optional; omitted locally; JWT auth does not need it |
+| `STRIPE_SECRET_KEY` | API runtime | When billing lands |
+| `STRIPE_WEBHOOK_SECRET` | API runtime | When billing lands |
+| `GOOGLE_OAUTH_CLIENT_ID` | API runtime | Optional |
+| `GOOGLE_OAUTH_CLIENT_SECRET` | API runtime | Optional |
+| `GITHUB_OAUTH_CLIENT_ID` | API runtime | Optional |
+| `GITHUB_OAUTH_CLIENT_SECRET` | API runtime | Optional |
+
+`CORS_ORIGINS` is an explicit allowlist (`Authorization` and `Content-Type` are
+already permitted). Stripe webhooks hit the API origin. OAuth redirect URIs
+belong on the API origin. Email/password works with the OAuth variables unset.
+Plans live in Postgres; Stripe keys stay in env.
 
 ## Agents
 
