@@ -1,5 +1,5 @@
-import os
-from collections.abc import Awaitable, Callable
+from collections.abc import AsyncGenerator, Awaitable, Callable
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request, Response
 from fastapi.exceptions import RequestValidationError
@@ -8,11 +8,23 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
+from apps.api.config import load_settings
 from apps.api.i18n import DEFAULT_LOCALE, as_error_list, as_loc, as_tree, negotiate, t
+from apps.api.migrate import migrate
+from apps.api.oauth import include_oauth
+from apps.api.schemas import UserCreate, UserRead, UserUpdate
+from apps.api.users import build_auth
+
+PROJECT_NAME = {{ project_name | tojson }}
 
 
 class Health(BaseModel):
     status: str = "ok"
+
+
+class Providers(BaseModel):
+    google: bool
+    github: bool
 
 
 _DEFAULT_HTTP_DETAIL = {
@@ -25,32 +37,26 @@ _HTTP_DETAIL_KEY = {
 }
 
 
-def cors_origins() -> list[str]:
-    raw = os.environ.get("CORS_ORIGINS", "")
-    return [item.strip().rstrip("/") for item in raw.split(",") if item.strip()]
-
-
-def cors_origin_regex() -> str | None:
-    value = os.environ.get("CORS_ORIGIN_REGEX", "").strip()
-    if value == "":
-        return None
-    return value
-
-
 def request_locale(request: Request) -> str:
     value = getattr(request.state, "locale", DEFAULT_LOCALE)
     return value if isinstance(value, str) else DEFAULT_LOCALE
 
 
 def create_app() -> FastAPI:
-    application = FastAPI(title={{ project_name | tojson }})
-    origins = cors_origins()
-    origin_regex = cors_origin_regex()
-    if origins or origin_regex is not None:
+    settings = load_settings()
+    backend, fastapi_users = build_auth(settings)
+
+    @asynccontextmanager
+    async def lifespan(_app: FastAPI) -> AsyncGenerator[None]:
+        await migrate(settings.database_url)
+        yield
+
+    application = FastAPI(title=PROJECT_NAME, lifespan=lifespan)
+    if settings.cors_origins or settings.cors_origin_regex is not None:
         application.add_middleware(
             CORSMiddleware,
-            allow_origins=origins,
-            allow_origin_regex=origin_regex,
+            allow_origins=list(settings.cors_origins),
+            allow_origin_regex=settings.cors_origin_regex,
             allow_credentials=False,
             allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
             allow_headers=["Authorization", "Content-Type"],
@@ -121,10 +127,34 @@ def create_app() -> FastAPI:
             headers={"Content-Language": locale},
         )
 
+    application.include_router(
+        fastapi_users.get_auth_router(backend),
+        prefix="/auth/jwt",
+        tags=["auth"],
+    )
+    application.include_router(
+        fastapi_users.get_register_router(UserRead, UserCreate),
+        prefix="/auth",
+        tags=["auth"],
+    )
+    application.include_router(
+        fastapi_users.get_users_router(UserRead, UserUpdate),
+        prefix="/users",
+        tags=["users"],
+    )
+
+    @application.get("/auth/providers")
+    def providers() -> Providers:
+        return Providers(
+            google=settings.google is not None,
+            github=settings.github is not None,
+        )
+
     @application.get("/api/health")
     def health() -> Health:
         return Health()
 
+    include_oauth(application, settings, backend, fastapi_users.get_user_manager)
     return application
 
 

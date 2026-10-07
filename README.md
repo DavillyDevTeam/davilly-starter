@@ -28,8 +28,10 @@ Landing copy and API-facing strings live in shared i18next JSON v4 catalogs.
 The Generated app README documents native development,
 `pnpm nx run-many -t lint,typecheck,test,build`, and production deploy
 (Cloudflare Pages SPA + FastAPI on any Docker host). Generated apps ship
-`AGENTS.md` and `docs/agents/` (Orca optional). No credentials are needed
-for boot. Auth, billing, OAuth, and CI are follow-up work.
+`AGENTS.md` and `docs/agents/` (Orca optional). Email and password sign-in
+works on first boot with the local Compose secret. Google and GitHub appear
+only when their OAuth env vars are set. There is no Redis denylist: logout
+drops the JWT in the browser. Billing and CI are follow-up work.
 
 ## Develop the Generator
 

@@ -2,15 +2,25 @@
 name = "{{ project_slug }}"
 version = "0.1.0"
 requires-python = ">=3.14"
-dependencies = ["fastapi>=0.115,<1", "uvicorn>=0.34,<1"]
+dependencies = [
+  "fastapi>=0.115,<1",
+  "uvicorn>=0.34,<1",
+  "fastapi-users[sqlalchemy,oauth]==15.0.5",
+  "sqlalchemy[asyncio]>=2.0.54,<2.1",
+  "asyncpg>=0.30,<1",
+  "alembic>=1.16,<2",
+  "email-validator>=2.0,<2.4",
+  "python-multipart>=0.0.22,<0.1",
+]
 [dependency-groups]
-dev = ["ruff", "basedpyright", "pytest", "httpx", "httpx2"]
+dev = ["ruff", "basedpyright", "pytest", "httpx", "aiosqlite>=0.21,<1"]
 [tool.ruff.format]
 quote-style = "preserve"
 
 [tool.basedpyright]
 include = ["apps/api"]
 typeCheckingMode = "recommended"
+failOnWarnings = true
 reportExplicitAny = "error"
 reportIgnoreCommentWithoutRule = "error"
 [tool.ruff.lint]

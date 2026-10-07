@@ -16,7 +16,17 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.api
-    ports: ["${API_PORT:-8000}:8000"]
+    environment:
+      DATABASE_URL: postgresql+asyncpg://app:local-development-only@db:5432/app
+      SECRET: local-development-only-change-me
+      CORS_ORIGINS: http://localhost:${WEB_PORT:-5173}
+      SPA_ORIGIN: http://localhost:${WEB_PORT:-5173}
+      GOOGLE_OAUTH_CLIENT_ID: ${GOOGLE_OAUTH_CLIENT_ID:-}
+      GOOGLE_OAUTH_CLIENT_SECRET: ${GOOGLE_OAUTH_CLIENT_SECRET:-}
+      GITHUB_OAUTH_CLIENT_ID: ${GITHUB_OAUTH_CLIENT_ID:-}
+      GITHUB_OAUTH_CLIENT_SECRET: ${GITHUB_OAUTH_CLIENT_SECRET:-}
+      AUTH_CSRF_COOKIE_SECURE: ${AUTH_CSRF_COOKIE_SECURE:-}
+    ports: ["127.0.0.1:${API_PORT:-8000}:8000"]
     depends_on:
       db:
         condition: service_healthy
@@ -26,7 +36,7 @@ services:
       dockerfile: Dockerfile.web
     environment:
       API_PROXY_TARGET: http://api:8000
-    ports: ["${WEB_PORT:-5173}:5173"]
+    ports: ["127.0.0.1:${WEB_PORT:-5173}:5173"]
     depends_on: [api]
 volumes:
   postgres-data:

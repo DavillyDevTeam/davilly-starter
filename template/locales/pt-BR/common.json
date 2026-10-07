@@ -16,5 +16,22 @@
       "grow": "Pronto para crescer com você"
     },
     "footer": "Feito com carinho por"
+  },
+  "auth": {
+    "signIn": "Entrar",
+    "register": "Criar conta",
+    "email": "E-mail",
+    "password": "Senha",
+    "account": "Conta",
+    "signOut": "Sair",
+    "signedInAs": "Sessão de",
+    "needAccount": "Ainda não tem conta?",
+    "haveAccount": "Já tem uma conta?",
+    "continueWithGoogle": "Continuar com Google",
+    "continueWithGitHub": "Continuar com GitHub",
+    "failed": "E-mail ou senha incorretos.",
+    "registerFailed": "Não foi possível criar a conta.",
+    "oauthFailed": "Não foi possível usar esse provedor.",
+    "passwordShort": "Use pelo menos 8 caracteres."
   }
 }

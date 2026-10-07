@@ -16,5 +16,22 @@
       "grow": "Ready to grow with you"
     },
     "footer": "Made with care by"
+  },
+  "auth": {
+    "signIn": "Sign in",
+    "register": "Create account",
+    "email": "Email",
+    "password": "Password",
+    "account": "Account",
+    "signOut": "Sign out",
+    "signedInAs": "Signed in as",
+    "needAccount": "New here?",
+    "haveAccount": "Already have an account?",
+    "continueWithGoogle": "Continue with Google",
+    "continueWithGitHub": "Continue with GitHub",
+    "failed": "Email or password is wrong.",
+    "registerFailed": "Could not create the account.",
+    "oauthFailed": "The sign-in provider could not be used.",
+    "passwordShort": "Use at least 8 characters."
   }
 }
