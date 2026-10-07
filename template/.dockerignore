@@ -1,0 +1,6 @@
+.venv
+node_modules
+.nx
+.git
+**/dist
+**/__pycache__

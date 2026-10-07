@@ -9,19 +9,30 @@ description = "Davilly Starter Generator CLI"
 readme = "README.md"
 requires-python = ">=3.14"
 license = "MIT"
-dependencies = ["typer>=0.27.3,<0.28", "copier>=9,<10"]
+dependencies = ["typer>=0.27.3,<0.28", "copier>=9.11,<10"]
 
 [project.scripts]
 davilly-starter = "davilly_starter.main:app"
 
 [dependency-groups]
-dev = ["basedpyright>=1.40.2,<1.41", "ruff>=0.16.10,<0.17"]
+dev = [
+  "basedpyright>=1.40.2,<1.41",
+  "pytest>=9.1.1,<10",
+  "ruff>=0.16.10,<0.17",
+]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/davilly_starter"]
 
+[tool.hatch.build.targets.wheel.force-include]
+"copier.yml" = "davilly_starter/copier_root/copier.yml"
+"template" = "davilly_starter/copier_root/template"
+
+[tool.hatch.build.targets.sdist]
+include = ["src", "template", "copier.yml", "pyproject.toml", "README.md", "LICENSE"]
+
 [tool.basedpyright]
-include = ["src"]
+include = ["src", "tests"]
 pythonVersion = "3.14"
 pythonPlatform = "All"
 typeCheckingMode = "recommended"
@@ -31,8 +42,7 @@ reportIgnoreCommentWithoutRule = "error"
 
 [tool.ruff]
 target-version = "py314"
-src = ["src"]
-include = ["src/**/*.py", "pyproject.toml"]
+src = ["src", "tests"]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "UP", "B", "ANN", "PYI", "PGH", "RUF", "ASYNC"]
@@ -40,3 +50,6 @@ preview = true
 
 [tool.ruff.format]
 docstring-code-format = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
