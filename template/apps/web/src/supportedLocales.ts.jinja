@@ -1,0 +1,4 @@
+export const supportedLocales: readonly string[] = {{ locales | tojson }};
+export const defaultLocale: string = {{ ("en" if "en" in locales else locales[0]) | tojson }};
+export const projectName: string = {{ project_name | tojson }};
+export const author: string = {{ author | tojson }};

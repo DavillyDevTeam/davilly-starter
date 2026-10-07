@@ -18,10 +18,12 @@ uvx --from git+https://github.com/DavillyDevTeam/davilly-starter davilly-starter
   --project-name 'My Product' --author 'My Team' --license MIT --locales en,pt-BR
 ```
 
+`--locales en` writes an English-only tree (no `pt-BR` catalogs or language switcher).
 The directory name must be lowercase kebab-case. Existing directories are
 rejected. Supported locales are `en`, `pt-BR`, or both; supported license options
 are `MIT`, `Apache-2.0`, and `UNLICENSED`. No prompts or second Template clone.
 The Template is bundled inside the installed wheel at `davilly_starter/copier_root`.
+Landing copy and API-facing strings live in shared i18next JSON v4 catalogs.
 
 The Generated app README documents native development,
 `pnpm nx run-many -t lint,typecheck,test,build`, and production deploy

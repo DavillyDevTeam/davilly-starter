@@ -1,0 +1,20 @@
+{
+  "nav": {
+    "language": "Idioma"
+  },
+  "language": {
+    "label": "Português (Brasil)"
+  },
+  "landing": {
+    "eyebrow": "Abra espaço para o que importa",
+    "title": "Seu próximo capítulo começa aqui.",
+    "description": "Um lugar para transformar grandes ideias em progresso diário. Menos obstáculos. Mais possibilidades.",
+    "cta": "Explore as possibilidades",
+    "features": {
+      "path": "Um caminho mais claro",
+      "day": "Feito para o seu dia",
+      "grow": "Pronto para crescer com você"
+    },
+    "footer": "Feito com carinho por"
+  }
+}

@@ -38,6 +38,29 @@ AGENT_TRIGGERS = (
 )
 
 
+def generate(destination: Path, *flags: str) -> None:
+    result = CliRunner().invoke(app, ["new", str(destination), *flags])
+    assert result.exit_code == 0, result.output
+
+
+def read(destination: Path, relative: str) -> str:
+    return (destination / relative).read_text(encoding="utf-8")
+
+
+def files_mentioning(destination: Path, needle: str) -> list[Path]:
+    hits: list[Path] = []
+    for path in destination.rglob("*"):
+        if not path.is_file():
+            continue
+        try:
+            text = path.read_text(encoding="utf-8")
+        except UnicodeDecodeError:
+            continue
+        if needle in text:
+            hits.append(path)
+    return hits
+
+
 def assert_api_style_clean(destination: Path) -> None:
     api = destination / "apps" / "api"
     for args in (
@@ -83,29 +106,33 @@ def test_existing_directory_is_preserved(tmp_path: Path) -> None:
     assert marker.read_text() == "keep"
 
 
-@pytest.mark.parametrize("locales", ["en,pt-BR", "en", "pt-BR", "pt-BR,en"])
-def test_generation(tmp_path: Path, locales: str) -> None:
+def test_default_locales_are_english_and_portuguese(tmp_path: Path) -> None:
     destination = tmp_path / "my-app"
-    result = CliRunner().invoke(
-        app,
-        [
-            "new",
-            str(destination),
-            "--project-name",
-            'A "quoted" app',
-            "--author",
-            "A Team",
-            "--locales",
-            locales,
-        ],
+    generate(
+        destination,
+        "--project-name",
+        'A "quoted" app',
+        "--author",
+        "A Team",
     )
-    assert result.exit_code == 0, result.output
-    catalog = (destination / "apps/web/src/copy.ts").read_text()
-    assert 'A \\"quoted\\" app' in catalog
-    assert ("Português" in catalog) == ("pt-BR" in locales)
-    assert ("English" in catalog) == ("en" in locales)
+    english = read(destination, "locales/en/common.json")
+    portuguese = read(destination, "locales/pt-BR/common.json")
+    assert "Your next chapter starts here." in english
+    assert "Seu próximo capítulo começa aqui." in portuguese
+    assert (destination / "locales/en/errors.json").exists()
+    assert (destination / "locales/pt-BR/errors.json").exists()
+    assert (destination / "apps/web/src/LanguageSwitcher.tsx").exists()
+    assert not (destination / "apps/web/src/copy.ts").exists()
+    answers = read(destination, ".copier-answers.yml")
+    assert "pt-BR" in answers
+    supported = read(destination, "apps/web/src/supportedLocales.ts")
+    assert '"pt-BR"' in supported
+    assert '"en"' in supported
+    api = read(destination, "apps/api/i18n.py")
+    assert '"pt-BR"' in api
+    assert 'A \\"quoted\\" app' in supported
+    assert "A Team" in read(destination, "LICENSE")
     assert (destination / "compose.yaml").exists()
-    assert "A Team" in (destination / "LICENSE").read_text()
     assert_agent_rails(destination, 'A "quoted" app')
     assert_api_style_clean(destination)
 
@@ -153,7 +180,57 @@ def test_prod_deploy_docs_and_template_files(tmp_path: Path) -> None:
     assert_api_style_clean(destination)
 
 
-@pytest.mark.parametrize("arguments", [["--locales", "fr"], ["--license", "bogus"]])
+def test_english_only_omits_portuguese(tmp_path: Path) -> None:
+    destination = tmp_path / "my-app"
+    generate(destination, "--locales", "en")
+    assert (destination / "locales/en/common.json").exists()
+    assert (destination / "locales/en/errors.json").exists()
+    assert not (destination / "locales/pt-BR").exists()
+    assert not (destination / "apps/web/src/LanguageSwitcher.tsx").exists()
+    supported = read(destination, "apps/web/src/supportedLocales.ts")
+    assert "pt-BR" not in supported
+    api = read(destination, "apps/api/i18n.py")
+    assert "pt-BR" not in api
+    hits = files_mentioning(destination, "pt-BR")
+    assert hits == [], hits
+
+
+def test_portuguese_only_omits_english_files(tmp_path: Path) -> None:
+    destination = tmp_path / "my-app"
+    generate(destination, "--locales", "pt-BR")
+    assert (destination / "locales/pt-BR/common.json").exists()
+    assert not (destination / "locales/en").exists()
+    assert not (destination / "apps/web/src/LanguageSwitcher.tsx").exists()
+    supported = read(destination, "apps/web/src/supportedLocales.ts")
+    assert "pt-BR" in supported
+    assert '"en"' not in supported
+    api = read(destination, "apps/api/i18n.py")
+    assert 'DEFAULT_LOCALE: str = "pt-BR"' in api
+    assert "tuple([" in api and "pt-BR" in api
+
+
+@pytest.mark.parametrize("locales", ["en,pt-BR", "pt-BR,en"])
+def test_both_locales_keep_switcher_and_default_english(
+    tmp_path: Path, locales: str
+) -> None:
+    destination = tmp_path / "my-app"
+    generate(destination, "--locales", locales)
+    assert (destination / "locales/en").is_dir()
+    assert (destination / "locales/pt-BR").is_dir()
+    assert (destination / "apps/web/src/LanguageSwitcher.tsx").exists()
+    supported = read(destination, "apps/web/src/supportedLocales.ts")
+    assert 'export const defaultLocale: string = "en"' in supported
+
+
+@pytest.mark.parametrize(
+    "arguments",
+    [
+        ["--locales", "fr"],
+        ["--locales", "en,fr"],
+        ["--locales", ""],
+        ["--license", "bogus"],
+    ],
+)
 def test_invalid_flags_do_not_write(tmp_path: Path, arguments: list[str]) -> None:
     destination = tmp_path / "my-app"
     result = CliRunner().invoke(app, ["new", str(destination), *arguments])

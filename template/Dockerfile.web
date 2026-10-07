@@ -4,6 +4,7 @@ RUN corepack enable
 WORKDIR /app
 COPY package.json pnpm-workspace.yaml nx.json ./
 COPY apps/web apps/web
+COPY locales locales
 RUN pnpm install
 EXPOSE 5173
 CMD ["pnpm", "--dir", "apps/web", "dev"]

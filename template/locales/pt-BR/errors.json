@@ -1,0 +1,16 @@
+{
+  "pydantic": {
+    "missing": "Campo obrigatório",
+    "int_parsing": "Informe um número inteiro válido",
+    "float_parsing": "Informe um número válido",
+    "bool_parsing": "Informe um valor booleano válido",
+    "string_type": "Informe um texto válido",
+    "string_too_short": "O valor deve ter pelo menos {{min_length}} caracteres",
+    "string_too_long": "O valor deve ter no máximo {{max_length}} caracteres",
+    "too_short": "A lista deve ter pelo menos {{min_length}} itens",
+    "too_long": "A lista deve ter no máximo {{max_length}} itens",
+    "extra_forbidden": "Campos extras não são permitidos",
+    "json_invalid": "JSON inválido",
+    "value_error": "Valor inválido"
+  }
+}

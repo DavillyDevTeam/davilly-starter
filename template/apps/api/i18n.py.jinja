@@ -1,0 +1,130 @@
+from pathlib import Path
+
+from pydantic import TypeAdapter, ValidationError
+
+SUPPORTED_LOCALES: tuple[str, ...] = tuple({{ locales | tojson }})
+DEFAULT_LOCALE: str = {{ ("en" if "en" in locales else locales[0]) | tojson }}
+
+_LOCALES_DIR = Path(__file__).resolve().parents[2] / "locales"
+_JSON_VALUE = TypeAdapter(object)
+_TREE = TypeAdapter(dict[str, object])
+_ERROR_LIST = TypeAdapter(list[dict[str, object]])
+_LOC = TypeAdapter(list[str | int])
+
+
+def as_tree(value: object) -> dict[str, object] | None:
+    try:
+        return _TREE.validate_python(value)
+    except ValidationError:
+        return None
+
+
+def as_error_list(value: object) -> list[dict[str, object]]:
+    try:
+        return _ERROR_LIST.validate_python(value)
+    except ValidationError:
+        return []
+
+
+def as_loc(value: object) -> list[str | int]:
+    try:
+        return _LOC.validate_python(value)
+    except ValidationError:
+        return []
+
+
+def _load_catalogs() -> dict[str, dict[str, object]]:
+    catalogs: dict[str, dict[str, object]] = {}
+    for locale in SUPPORTED_LOCALES:
+        namespace_trees: dict[str, object] = {}
+        locale_dir = _LOCALES_DIR / locale
+        if locale_dir.is_dir():
+            for path in sorted(locale_dir.glob("*.json")):
+                loaded = _JSON_VALUE.validate_json(path.read_text(encoding="utf-8"))
+                tree = as_tree(loaded)
+                if tree is not None:
+                    namespace_trees[path.stem] = tree
+        catalogs[locale] = namespace_trees
+    return catalogs
+
+
+_CATALOGS = _load_catalogs()
+
+
+def _lookup(tree: object, path: str) -> str | None:
+    current: object = tree
+    for part in path.split("."):
+        branch = as_tree(current)
+        if branch is None or part not in branch:
+            return None
+        current = branch[part]
+    return current if isinstance(current, str) else None
+
+
+def _placeholder(name: str) -> str:
+    return "{" + "{" + name + "}" + "}"
+
+
+def _interpolate(template: str, values: dict[str, object]) -> str:
+    rendered = template
+    for name, value in values.items():
+        rendered = rendered.replace(_placeholder(name), str(value))
+    return rendered
+
+
+def t(key: str, locale: str, /, **kwargs: object) -> str:
+    namespace, separator, rest = key.partition(".")
+    if separator == "":
+        return key
+    for candidate in (locale, DEFAULT_LOCALE):
+        namespaces = _CATALOGS.get(candidate)
+        if namespaces is None:
+            continue
+        found = _lookup(namespaces.get(namespace), rest)
+        if found is not None:
+            return _interpolate(found, kwargs)
+    return key
+
+
+def negotiate(accept_language: str | None) -> str:
+    if accept_language is None or accept_language.strip() == "":
+        return DEFAULT_LOCALE
+    ranges: list[tuple[float, int, str]] = []
+    for index, item in enumerate(accept_language.split(",")):
+        raw = item.strip()
+        if raw == "":
+            continue
+        tag = raw
+        quality = 1.0
+        if ";" in raw:
+            tag, *params = [part.strip() for part in raw.split(";")]
+            for param in params:
+                if param.startswith("q="):
+                    try:
+                        quality = float(param.removeprefix("q="))
+                    except ValueError:
+                        quality = 0.0
+        if quality <= 0 or tag == "":
+            continue
+        ranges.append((-quality, index, tag.replace("_", "-")))
+    ranges.sort()
+    for _, _, tag in ranges:
+        if tag == "*":
+            return DEFAULT_LOCALE
+        matched = _match_tag(tag)
+        if matched is not None:
+            return matched
+    return DEFAULT_LOCALE
+
+
+def _match_tag(tag: str) -> str | None:
+    lowered = tag.casefold()
+    for supported in SUPPORTED_LOCALES:
+        candidate = supported.casefold()
+        if (
+            lowered == candidate
+            or candidate.startswith(f"{lowered}-")
+            or lowered.startswith(f"{candidate}-")
+        ):
+            return supported
+    return None
