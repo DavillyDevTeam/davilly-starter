@@ -25,7 +25,8 @@ are `MIT`, `Apache-2.0`, and `UNLICENSED`. No prompts or second Template clone.
 The Template is bundled inside the installed wheel at `davilly_starter/copier_root`.
 
 The Generated app README documents native development and
-`pnpm nx run-many -t lint,typecheck,test,build`. No credentials are needed for boot.
+`pnpm nx run-many -t lint,typecheck,test,build`. Generated apps ship `AGENTS.md`
+and `docs/agents/` (Orca optional). No credentials are needed for boot.
 Auth, billing, OAuth, production deployment, and CI are follow-up work.
 
 ## Develop the Generator

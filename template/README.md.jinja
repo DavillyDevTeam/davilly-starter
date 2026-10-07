@@ -37,3 +37,9 @@ Python dependencies belong to uv; JS dependencies belong to pnpm. Commit the
 `api` and `web` projects. No hosted services or credentials are needed.
 Authentication, payments, deployment and CI are future additions.
 Copier records answers for inspection; automatic template updates are not supported yet.
+
+## Agents
+
+This tree ships `AGENTS.md` and `docs/agents/` for hosts that use Orca and the
+Matt Pocock skills pack. Orca is optional: Compose boot and
+`pnpm nx run-many -t lint,typecheck,test,build` do not invoke it.
