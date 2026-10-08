@@ -8,8 +8,16 @@ By {{ author }}. License: {{ license }} (see LICENSE).
 docker compose up --build
 ```
 
-Open http://localhost:5173. Choose English or Português (Brasil) in the header
-(default catalogs: {{ locales }}). The SPA proxies `/api/health` to FastAPI.
+Open http://localhost:5173.
+{% if locales | length > 1 %}
+Choose English or Português (Brasil) in the header. Catalogs ship for every
+selected locale.
+{% elif locales[0] == 'en' %}
+The landing is in English.
+{% else %}
+The landing is in Português (Brasil).
+{% endif %}
+The SPA proxies `/api/health` to FastAPI.
 Postgres is included with persistent local storage; this landing does not yet use it.
 These containers are for local development. Stop with `docker compose down`.
 Set `WEB_PORT` / `API_PORT` if the defaults are occupied.
@@ -37,6 +45,7 @@ Python dependencies belong to uv; JS dependencies belong to pnpm. Commit the
 `api` and `web` projects. No hosted services or credentials are needed for boot.
 Authentication, payments, and CI are future additions.
 Copier records answers for inspection; automatic template updates are not supported yet.
+Landing copy and API error strings live in `locales/` as i18next JSON v4 catalogs.
 
 ## Production
 

@@ -1,4 +1,8 @@
 _subdirectory: template
+_exclude:
+  - "{% if 'en' not in locales %}locales/en{% endif %}"
+  - "{% if 'pt-BR' not in locales %}locales/pt-BR{% endif %}"
+  - "{% if locales | length < 2 %}apps/web/src/LanguageSwitcher.tsx{% endif %}"
 project_slug:
   type: str
   default: my-app
@@ -14,5 +18,15 @@ license:
   choices: [MIT, Apache-2.0, UNLICENSED]
 locales:
   type: str
-  default: en,pt-BR
-  choices: ["en,pt-BR", "en", "pt-BR", "pt-BR,en"]
+  help: BCP 47 locales to ship (English and/or Portuguese Brazil)
+  choices:
+    - en
+    - pt-BR
+  multiselect: true
+  default:
+    - en
+    - pt-BR
+  validator: >-
+    {%- if locales | length < 1 -%}
+    Select at least one locale
+    {%- endif -%}

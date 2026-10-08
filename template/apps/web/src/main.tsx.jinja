@@ -1,0 +1,65 @@
+import { StrictMode } from 'react';
+import { createRoot } from 'react-dom/client';
+import { I18nextProvider, useTranslation } from 'react-i18next';
+import { i18n, initI18n } from './i18n';
+{% if locales | length > 1 %}
+import { LanguageSwitcher } from './LanguageSwitcher';
+{% endif %}
+import { author, projectName } from './supportedLocales';
+import './style.css';
+
+const FEATURES: readonly string[] = ['path', 'day', 'grow'];
+
+function Landing() {
+  const { t } = useTranslation('common');
+  return (
+    <>
+      <header>
+        <a href="#">
+          {projectName}
+          <span>✦</span>
+        </a>
+        {% if locales | length > 1 %}
+        <LanguageSwitcher />
+        {% endif %}
+      </header>
+      <main>
+        <section className="hero">
+          <p className="eyebrow">{t('landing.eyebrow')}</p>
+          <h1>{t('landing.title')}</h1>
+          <p className="description">{t('landing.description')}</p>
+          <a className="cta" href="#possibilities">
+            {t('landing.cta')} <span>↗</span>
+          </a>
+          <div className="orbit" aria-hidden="true">
+            <div>✦</div>
+          </div>
+        </section>
+        <section id="possibilities" className="features">
+          {FEATURES.map((feature, index) => (
+            <article key={feature}>
+              <span>0{index + 1}</span>
+              <h2>{t(`landing.features.${feature}`)}</h2>
+            </article>
+          ))}
+        </section>
+      </main>
+      <footer>
+        {projectName} · {t('landing.footer')} {author}
+      </footer>
+    </>
+  );
+}
+
+const root = document.getElementById('root');
+if (!root) throw new Error('Missing root element');
+
+void initI18n().then(() => {
+  createRoot(root).render(
+    <StrictMode>
+      <I18nextProvider i18n={i18n}>
+        <Landing />
+      </I18nextProvider>
+    </StrictMode>,
+  );
+});

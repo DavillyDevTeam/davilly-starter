@@ -1,12 +1,28 @@
 import os
+from collections.abc import Awaitable, Callable
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, Response
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
+from starlette.exceptions import HTTPException as StarletteHTTPException
+
+from apps.api.i18n import DEFAULT_LOCALE, as_error_list, as_loc, as_tree, negotiate, t
 
 
 class Health(BaseModel):
     status: str = "ok"
+
+
+_DEFAULT_HTTP_DETAIL = {
+    404: "Not Found",
+    405: "Method Not Allowed",
+}
+_HTTP_DETAIL_KEY = {
+    404: "errors.http.not_found",
+    405: "errors.http.method_not_allowed",
+}
 
 
 def cors_origins() -> list[str]:
@@ -21,6 +37,11 @@ def cors_origin_regex() -> str | None:
     return value
 
 
+def request_locale(request: Request) -> str:
+    value = getattr(request.state, "locale", DEFAULT_LOCALE)
+    return value if isinstance(value, str) else DEFAULT_LOCALE
+
+
 def create_app() -> FastAPI:
     application = FastAPI(title={{ project_name | tojson }})
     origins = cors_origins()
@@ -33,6 +54,71 @@ def create_app() -> FastAPI:
             allow_credentials=False,
             allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
             allow_headers=["Authorization", "Content-Type"],
+        )
+
+    @application.middleware("http")
+    async def attach_locale(
+        request: Request, call_next: Callable[[Request], Awaitable[Response]]
+    ) -> Response:
+        request.state.locale = negotiate(request.headers.get("accept-language"))
+        response = await call_next(request)
+        response.headers["Content-Language"] = request_locale(request)
+        return response
+
+    @application.exception_handler(StarletteHTTPException)
+    async def http_exception_handler(
+        request: Request, exc: StarletteHTTPException
+    ) -> JSONResponse:
+        locale = request_locale(request)
+        headers = dict(exc.headers or {})
+        headers["Content-Language"] = locale
+        detail: object = exc.detail
+        tree = as_tree(detail)
+        code = None if tree is None else tree.get("code")
+        if isinstance(code, str):
+            return JSONResponse(
+                status_code=exc.status_code,
+                content={"detail": {"code": code, "message": t(code, locale)}},
+                headers=headers,
+            )
+        if (
+            isinstance(detail, str)
+            and _DEFAULT_HTTP_DETAIL.get(exc.status_code) == detail
+        ):
+            catalog_key = _HTTP_DETAIL_KEY[exc.status_code]
+            message = t(catalog_key, locale)
+            if message != catalog_key:
+                detail = message
+        return JSONResponse(
+            status_code=exc.status_code,
+            content={"detail": detail},
+            headers=headers,
+        )
+
+    @application.exception_handler(RequestValidationError)
+    async def validation_exception_handler(
+        request: Request, exc: RequestValidationError
+    ) -> JSONResponse:
+        locale = request_locale(request)
+        details: list[dict[str, object]] = []
+        raw_errors: object = exc.errors()
+        for error in as_error_list(raw_errors):
+            error_type = error.get("type")
+            if not isinstance(error_type, str):
+                continue
+            interpolations = as_tree(error.get("ctx")) or {}
+            catalog_key = f"errors.pydantic.{error_type}"
+            message = t(catalog_key, locale, **interpolations)
+            if message == catalog_key:
+                raw_msg = error.get("msg")
+                message = raw_msg if isinstance(raw_msg, str) else catalog_key
+            details.append(
+                {"type": error_type, "loc": as_loc(error.get("loc")), "msg": message}
+            )
+        return JSONResponse(
+            status_code=422,
+            content={"detail": details},
+            headers={"Content-Language": locale},
         )
 
     @application.get("/api/health")

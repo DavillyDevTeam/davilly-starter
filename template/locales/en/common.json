@@ -1,0 +1,20 @@
+{
+  "nav": {
+    "language": "Language"
+  },
+  "language": {
+    "label": "English"
+  },
+  "landing": {
+    "eyebrow": "Make room for what matters",
+    "title": "Your next chapter starts here.",
+    "description": "One place to turn ambitious ideas into everyday progress. Less friction. More possibilities.",
+    "cta": "Explore the possibilities",
+    "features": {
+      "path": "A clearer path forward",
+      "day": "Built around your day",
+      "grow": "Ready to grow with you"
+    },
+    "footer": "Made with care by"
+  }
+}
