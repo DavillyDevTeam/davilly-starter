@@ -133,6 +133,18 @@ def test_default_locales_are_english_and_portuguese(tmp_path: Path) -> None:
     assert 'A \\"quoted\\" app' in supported
     assert "A Team" in read(destination, "LICENSE")
     assert (destination / "compose.yaml").exists()
+    assert "Sign in" in english
+    assert "Entrar" in portuguese
+    project = read(destination, "pyproject.toml")
+    compose = read(destination, "compose.yaml")
+    assert "fastapi-users[sqlalchemy,oauth]==15.0.5" in project
+    assert "redis" not in project.lower()
+    assert "REDIS_URL" not in compose
+    assert "image: redis" not in compose
+    assert "DATABASE_URL" in compose
+    assert "SECRET:" in compose
+    assert "GOOGLE_OAUTH_CLIENT_ID" in compose
+    assert "127.0.0.1:${API_PORT:-8000}:8000" in compose
     assert_agent_rails(destination, 'A "quoted" app')
     assert_api_style_clean(destination)
 
@@ -163,14 +175,14 @@ def test_prod_deploy_docs_and_template_files(tmp_path: Path) -> None:
     assert "STRIPE_SECRET_KEY" in readme
     assert "GOOGLE_OAUTH_CLIENT_ID" in readme
     assert "GITHUB_OAUTH_CLIENT_ID" in readme
-    assert "JWT_SECRET" in readme
+    assert "SECRET" in readme
     env_example = (destination / ".env.example").read_text()
     assert "VITE_API_URL=" in env_example
     assert "CORS_ORIGINS=" in env_example
     assert "DATABASE_URL=" in env_example
     api_main = (destination / "apps/api/main.py").read_text()
     assert "CORSMiddleware" in api_main
-    assert "CORS_ORIGINS" in api_main
+    assert "CORS_ORIGINS" in read(destination, "apps/api/config.py")
     assert "apiUrl" in (destination / "apps/web/src/api.ts").read_text()
     assert "VITE_API_URL" in (destination / "apps/web/src/vite-env.d.ts").read_text()
     compose = (destination / "compose.yaml").read_text()
