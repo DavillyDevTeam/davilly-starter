@@ -10,4 +10,9 @@ describe('apiUrl', () => {
       'https://api.example.com/api/health',
     );
   });
+  it('strips a trailing slash from the origin', () => {
+    expect(apiUrl('/api/health', 'https://api.example.com/')).toBe(
+      'https://api.example.com/api/health',
+    );
+  });
 });
