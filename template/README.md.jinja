@@ -73,9 +73,9 @@ Put that process behind HTTPS. A Pages SPA can only call an `https://` API.
 6. Leave out a top-level `404.html` so Pages serves `/` for unknown paths.
    Pages `_redirects` cannot proxy the API.
 
-The SPA calls `${VITE_API_URL}/api/...` via `apiUrl` in `apps/web/src/api.ts`.
-With `VITE_API_URL` unset, that is same-origin `/api/...` and the Vite proxy
-forwards it. Send `Authorization: Bearer` when auth lands; omit
+Use `apiUrl` in `apps/web/src/api.ts` for SPA API calls when they are added.
+With `VITE_API_URL` unset, it returns same-origin `/api/...` URLs and the Vite
+proxy forwards those requests. Send `Authorization: Bearer` when auth lands; omit
 `credentials: "include"` on `fetch`.
 
 ### Environment
@@ -99,9 +99,10 @@ keep secrets on the API.
 | `GITHUB_OAUTH_CLIENT_SECRET` | API runtime | Optional |
 
 `CORS_ORIGINS` is an explicit allowlist (`Authorization` and `Content-Type` are
-already permitted). Stripe webhooks hit the API origin. OAuth redirect URIs
-belong on the API origin. Email/password works with the OAuth variables unset.
-Plans live in Postgres; Stripe keys stay in env.
+already permitted). When billing lands, Stripe webhooks hit the API origin.
+When OAuth lands, redirect URIs belong on the API origin. Email/password will
+work with the OAuth variables unset. Plans will live in Postgres; Stripe keys
+stay in env.
 
 ## Agents
 
