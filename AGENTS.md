@@ -1,21 +1,10 @@
 ## Agent skills
 
-### Issue tracker
-
-Issues live in this repo's GitHub Issues (`gh` CLI). See `docs/agents/issue-tracker.md`.
-
-### Triage labels
-
-Canonical roles, same strings: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`. See `docs/agents/triage-labels.md`.
-
-### Domain docs
-
-Single-context: one `CONTEXT.md` + `docs/adr/` at the repo root. See `docs/agents/domain.md`.
-
-### Typing
-
-When changing code, dependencies, task targets, or CI, read and follow `docs/agents/typing.md` for mandatory toolchain and typing rules.
-
-### Handoff
-
-Orca handoff rails are owned by [Task: Agent rails for Orca handoff](https://github.com/DavillyDevTeam/davilly-starter/issues/23).
+- **Handoff** — full ownership transfer or host skill setup: see `docs/agents/handoff.md`.
+- **Wayfinder** — map and ticket work: load the `wayfinder` skill; see `docs/agents/issue-tracker.md` for tracker operations.
+- **Grilling** — stress-test a decision: load the `grilling` skill.
+- **Domain docs** — before exploring, read `docs/agents/domain.md`.
+- **Domain-modeling** — define domain language or record a decision: load the `domain-modeling` skill.
+- **Triage** — classify incoming issues: load the `triage` skill; see `docs/agents/triage-labels.md` for canonical roles.
+- **Issue tracker** — GitHub issue operations: see `docs/agents/issue-tracker.md`.
+- **Typing** — when changing code, dependencies, task targets, or CI: see `docs/agents/typing.md`.
