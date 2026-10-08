@@ -63,3 +63,49 @@ Follow [Wayfinder: davilly-starter v1](https://github.com/DavillyDevTeam/davilly
 ## License
 
 [MIT](LICENSE) © 2026 Davilly Software
+
+## Generator development
+
+The Starter is a standalone uv Python package, requiring Python 3.14
+(`.python-version`). It has no Just or Nx task layer. Install Python and the
+locked runtime/development dependencies with uv:
+
+```bash
+uv python install
+uv sync --locked
+uv run --locked davilly-starter --help
+uv run --locked davilly-starter new --help
+```
+
+The `new` command currently exits with a clear not-implemented message;
+[Task: Scaffold generator landing boot](https://github.com/DavillyDevTeam/davilly-starter/issues/8)
+owns Template expansion and the Generated app.
+
+Run the same Generator gates as CI:
+
+```bash
+uv lock --check
+uv run --locked ruff check .
+uv run --locked ruff format --check .
+uv run --locked basedpyright
+uv build
+uv tool run --from "$(find dist -name '*.whl' -print -quit)" davilly-starter --help
+```
+
+To format code, use `uv run --locked ruff format .`. After intentionally changing
+dependencies, run `uv lock` and commit `uv.lock`. uv is the only Python installer.
+
+Ruff targets Python 3.14 with annotations (`ANN`, including the ban on `Any`),
+`PYI`, `PGH`, and the research lint families. basedpyright is pinned to 1.40.x
+in `recommended` mode, fails on warnings, and treats explicit `Any` and ignores
+without a diagnostic code as errors. An exception needs a diagnostic code and
+a one-line explanation; do not cast or suppress errors to make checks pass.
+Lint discovery and type checking cover Generator sources, excluding the future
+Template's Generated-app code.
+
+The package follows the researched `src/davilly_starter` layout, Hatchling build,
+and single `davilly-starter` console script. When task #8 adds root `copier.yml`
+and `template/`, include them as package data at
+`davilly_starter/copier_root/{copier.yml,template}` using Hatchling wheel
+force-includes and ensure both originals are included in the sdist. Access the
+installed tree with `importlib.resources.as_file`; do not fetch a second clone.

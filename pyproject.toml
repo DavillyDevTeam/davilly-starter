@@ -1,0 +1,42 @@
+[build-system]
+requires = ["hatchling>=1.27,<2"]
+build-backend = "hatchling.build"
+
+[project]
+name = "davilly-starter"
+version = "0.1.0"
+description = "Davilly Starter Generator CLI"
+readme = "README.md"
+requires-python = ">=3.14"
+license = "MIT"
+dependencies = ["typer>=0.27.3,<0.28", "copier>=9,<10"]
+
+[project.scripts]
+davilly-starter = "davilly_starter.main:app"
+
+[dependency-groups]
+dev = ["basedpyright>=1.40.2,<1.41", "ruff>=0.16.10,<0.17"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/davilly_starter"]
+
+[tool.basedpyright]
+include = ["src"]
+pythonVersion = "3.14"
+pythonPlatform = "All"
+typeCheckingMode = "recommended"
+failOnWarnings = true
+reportExplicitAny = "error"
+reportIgnoreCommentWithoutRule = "error"
+
+[tool.ruff]
+target-version = "py314"
+src = ["src"]
+include = ["src/**/*.py", "pyproject.toml"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "ANN", "PYI", "PGH", "RUF", "ASYNC"]
+preview = true
+
+[tool.ruff.format]
+docstring-code-format = true

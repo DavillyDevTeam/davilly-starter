@@ -1,0 +1,29 @@
+name: Starter CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  generator:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6
+        with:
+          version: "0.12.23"
+          enable-cache: true
+      - run: uv python install
+      - run: uv lock --check
+      - run: uv sync --locked
+      - run: uv run --locked ruff check .
+      - run: uv run --locked ruff format --check .
+      - run: uv run --locked basedpyright
+      - run: uv build
+      - name: Smoke-test the installed wheel
+        run: uv tool run --from "$(find dist -name '*.whl' -print -quit)" davilly-starter --help
