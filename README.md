@@ -89,6 +89,7 @@ uv run --locked ruff check .
 uv run --locked ruff format --check .
 uv run --locked basedpyright
 uv build
+uv tool run --from "$(find dist -name '*.whl' -print -quit)" davilly-starter --help
 ```
 
 To format code, use `uv run --locked ruff format .`. After intentionally changing
