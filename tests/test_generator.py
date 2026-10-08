@@ -67,6 +67,7 @@ def assert_agent_rails(destination: Path, project_name: str) -> None:
     assert "just ci" not in handoff
     assert "pnpm nx run-many -t lint,typecheck,test,build" in handoff
     assert "accepted: true" in handoff
+    assert "Blocked by" in handoff
     for relative in TASK_FILES:
         text = (destination / relative).read_text().lower()
         assert "orca" not in text, relative

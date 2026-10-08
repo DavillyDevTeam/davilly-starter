@@ -51,16 +51,20 @@ Dispatcher prompt:
 ```text
 Load the wayfinder skill. Read the wayfinder:map issue and its Notes, plus
  docs/agents/issue-tracker.md and docs/agents/handoff.md.
-List the map's sub-issues via the paginated GitHub sub_issues endpoint in map order.
-Take the first open child with ready-for-agent, no assignees, and
-issue_dependencies_summary.blocked_by == 0. If none, stop.
+List the map's children in map order: native sub-issues via the paginated
+GitHub sub_issues endpoint, or the map body's task list when sub-issues
+are unavailable.
+Take the first open child with ready-for-agent, no assignees, and no open
+blocker (issue_dependencies_summary.blocked_by == 0, or no open issue in
+the child's Blocked by line when native dependencies are unavailable).
+If none, stop.
 Re-read the candidate before claiming; stop if its eligibility changed.
 Claim first with gh issue edit <N> --add-assignee @me, then verify the assignment.
 Full-handoff that one ticket using the Full handoff recipe and worker prompt above.
 Report the worktree id, handle, and accepted receipt, then stop.
 ```
 
-A bounded precheck exits zero only when a takeable child exists, otherwise the run is skipped. Use `blocked_by` (open blockers), not `total_blocked_by`. Preserve sub-issue map order across pagination; issue-list recency is not map order. Select only `ready-for-agent` work. The dispatcher neither implements nor resolves tickets. GitHub assignment is not an atomic lock: serialize dispatcher runs and stop if another claimant is observed.
+A bounded precheck exits zero only when a takeable child exists, otherwise the run is skipped. Use `blocked_by` (open blockers), not `total_blocked_by`. When native dependencies are unavailable, treat an open issue in the child's `Blocked by` line as a blocker. Preserve map order across sub-issue pagination or the task list; issue-list recency is not map order. Select only `ready-for-agent` work. The dispatcher neither implements nor resolves tickets. GitHub assignment is not an atomic lock: serialize dispatcher runs and stop if another claimant is observed.
 
 ## Git vs host
 
