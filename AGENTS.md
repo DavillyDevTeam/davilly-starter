@@ -11,3 +11,11 @@ Canonical roles, same strings: `needs-triage`, `needs-info`, `ready-for-agent`, 
 ### Domain docs
 
 Single-context: one `CONTEXT.md` + `docs/adr/` at the repo root. See `docs/agents/domain.md`.
+
+### Typing
+
+When changing code, dependencies, task targets, or CI, read and follow `docs/agents/typing.md` for mandatory toolchain and typing rules.
+
+### Handoff
+
+Orca handoff rails are owned by [Task: Agent rails for Orca handoff](https://github.com/DavillyDevTeam/davilly-starter/issues/23).
