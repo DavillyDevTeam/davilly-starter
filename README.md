@@ -28,16 +28,12 @@ Copier parameters will include project name, author, license (MIT by default), a
 | Frontend | Vite + React SPA with a marketing landing page |
 | Database | Postgres |
 | Workspace | Nx at the Generated-app root; pnpm for the SPA; uv for all Python dependencies, with Nx targets calling `uv run` |
-| Auth | fastapi-users with email/password and JWT; Google and GitHub OAuth optional via runtime environment variables |
-| Billing | Stripe subscriptions, Customer Portal, and signed webhooks using Stripe’s official SDK |
+| Auth | fastapi-users with email/password and JWT; logout discards the client token (no server-side revoke, no Redis for auth); Google and GitHub OAuth optional via runtime environment variables |
+| Billing | Stripe subscriptions, Customer Portal, and signed webhooks using Stripe’s official SDK; plans live in Postgres, admin-managed and feature-flagged; Stripe API keys stay in env |
 | Locales | `en,pt-BR` by default, configurable through Copier |
 | Local boot | Docker Compose; the first boot milestone is a visible marketing landing page |
 | Production | SPA on Cloudflare Pages; FastAPI API on any Docker host |
 | Agent guidance | `AGENTS.md` and `docs/agents/` for issue tracking, triage, and domain docs |
-
-Auth token storage and revocation remain under discussion in [Grilling: Auth token strategy after fastapi-users research](https://github.com/DavillyDevTeam/davilly-starter/issues/26). A Redis blacklist is not a settled feature; fastapi-users’ Redis strategy uses opaque tokens, and its JWT logout does not revoke a token.
-
-Billing initially uses one Stripe Price ID supplied through the environment. The plan catalog remains under discussion in [Grilling: Stripe plan catalog](https://github.com/DavillyDevTeam/davilly-starter/issues/14).
 
 ## Running a Generated app
 
