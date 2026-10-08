@@ -15,6 +15,16 @@ class Health(BaseModel):
     status: str = "ok"
 
 
+_DEFAULT_HTTP_DETAIL = {
+    404: "Not Found",
+    405: "Method Not Allowed",
+}
+_HTTP_DETAIL_KEY = {
+    404: "errors.http.not_found",
+    405: "errors.http.method_not_allowed",
+}
+
+
 def cors_origins() -> list[str]:
     raw = os.environ.get("CORS_ORIGINS", "")
     return [item.strip().rstrip("/") for item in raw.split(",") if item.strip()]
@@ -71,6 +81,14 @@ def create_app() -> FastAPI:
                 content={"detail": {"code": code, "message": t(code, locale)}},
                 headers=headers,
             )
+        if (
+            isinstance(detail, str)
+            and _DEFAULT_HTTP_DETAIL.get(exc.status_code) == detail
+        ):
+            catalog_key = _HTTP_DETAIL_KEY[exc.status_code]
+            message = t(catalog_key, locale)
+            if message != catalog_key:
+                detail = message
         return JSONResponse(
             status_code=exc.status_code,
             content={"detail": detail},

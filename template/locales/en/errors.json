@@ -1,4 +1,8 @@
 {
+  "http": {
+    "not_found": "Not Found",
+    "method_not_allowed": "Method Not Allowed"
+  },
   "pydantic": {
     "missing": "Field required",
     "int_parsing": "Input should be a valid integer",
