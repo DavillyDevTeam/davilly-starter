@@ -1,0 +1,20 @@
+[project]
+name = "{{ project_slug }}"
+version = "0.1.0"
+requires-python = ">=3.14"
+dependencies = ["fastapi>=0.115,<1", "uvicorn>=0.34,<1"]
+[dependency-groups]
+dev = ["ruff", "basedpyright", "pytest", "httpx2"]
+[tool.ruff.format]
+quote-style = "preserve"
+
+[tool.basedpyright]
+include = ["apps/api"]
+typeCheckingMode = "recommended"
+reportExplicitAny = "error"
+reportIgnoreCommentWithoutRule = "error"
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "ANN", "PGH", "RUF"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]

@@ -1,0 +1,39 @@
+# {{ project_name }}
+
+By {{ author }}. License: {{ license }} (see LICENSE).
+
+## Boot
+
+```sh
+docker compose up --build
+```
+
+Open http://localhost:5173. Choose English or Português (Brasil) in the header
+(default catalogs: {{ locales }}). The SPA proxies `/api/health` to FastAPI.
+Postgres is included with persistent local storage; this landing does not yet use it.
+These containers are for local development. Stop with `docker compose down`.
+Set `WEB_PORT` / `API_PORT` if the defaults are occupied.
+
+## Native development (equivalent)
+
+Install Node 24, pnpm 12.9.1, uv, and Docker for Postgres.
+
+```sh
+pnpm install
+uv sync
+docker compose up -d db
+pnpm nx run-many -t dev --parallel=2
+```
+
+Open http://localhost:5173. API docs: http://localhost:8000/docs.
+
+```sh
+pnpm nx run-many -t lint,typecheck,test,build
+pnpm nx run api:lock
+```
+
+Python dependencies belong to uv; JS dependencies belong to pnpm. Commit the
+`uv.lock` and `pnpm-lock.yaml` created at first install. Nx coordinates the
+`api` and `web` projects. No hosted services or credentials are needed.
+Authentication, payments, deployment and CI are future additions.
+Copier records answers for inspection; automatic template updates are not supported yet.

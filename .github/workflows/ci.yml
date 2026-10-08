@@ -20,10 +20,11 @@ jobs:
           enable-cache: true
       - run: uv python install
       - run: uv lock --check
-      - run: uv sync --locked
-      - run: uv run --locked ruff check .
-      - run: uv run --locked ruff format --check .
-      - run: uv run --locked basedpyright
+      - run: uv sync --locked --no-editable
+      - run: uv run --no-editable ruff check src tests
+      - run: uv run --no-editable ruff format --check src tests
+      - run: uv run --no-editable basedpyright
+      - run: uv run --no-editable pytest
       - run: uv build
       - name: Smoke-test the installed wheel
         run: uv tool run --from "$(find dist -name '*.whl' -print -quit)" davilly-starter --help

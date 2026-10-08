@@ -1,0 +1,18 @@
+_subdirectory: template
+project_slug:
+  type: str
+  default: my-app
+project_name:
+  type: str
+  default: "{{ project_slug }}"
+author:
+  type: str
+  default: Your team
+license:
+  type: str
+  default: MIT
+  choices: [MIT, Apache-2.0, UNLICENSED]
+locales:
+  type: str
+  default: en,pt-BR
+  choices: ["en,pt-BR", "en", "pt-BR", "pt-BR,en"]
